@@ -57,6 +57,7 @@ SourceViewer::SourceViewer(const QString &source, const QString &title,
 
     m_edit->setLineWrapMode(QPlainTextEdit::WidgetWidth);
     m_edit->setReadOnly(true);
+
     QFont font = m_edit->font();
     font.setFamily(QLatin1String("Monospace"));
     m_edit->setFont(font);
@@ -105,3 +106,4 @@ void SourceViewer::loadingFinished()
 
     m_reply->close();
 }
+
