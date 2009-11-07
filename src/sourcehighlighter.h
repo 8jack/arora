@@ -21,7 +21,6 @@
 #define SOURCEHIGHLIGHTER_H
 
 #include <qsyntaxhighlighter.h>
-#include <qset.h>
 
 class SourceHighlighter : public QSyntaxHighlighter
 {
@@ -29,9 +28,9 @@ class SourceHighlighter : public QSyntaxHighlighter
 
 public:
     enum Construct {
-        Keyword,
+        Entity,
+        Tag,
         Comment,
-        String,
         Attribute,
         LastConstruct = Attribute
     };
@@ -45,17 +44,12 @@ protected:
         Normal = -1,
         InComment,
         InTag,
-        InString
+        InAttribute
     };
     void highlightBlock(const QString &text);
-    void hlTags(int start, int stop, QString text);
-    bool isKeyword(QString token);
-    bool isAttribute(QString token);
 
 private:
     QTextCharFormat formats[LastConstruct + 1];
-    QSet<QString> keywords;
-    QSet<QString> attributes;
 };
 
 #endif
