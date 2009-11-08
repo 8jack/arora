@@ -32,7 +32,9 @@ public:
         Tag,
         Comment,
         Attribute,
-        LastConstruct = Attribute
+        String,
+        Doctype,
+        LastConstruct = Doctype
     };
     SourceHighlighter(QTextDocument *document);
 
@@ -44,7 +46,9 @@ protected:
         Normal = -1,
         InComment,
         InTag,
-        InAttribute
+        InAttribute,
+        InString,
+        InDoctype
     };
     void highlightBlock(const QString &text);
 
