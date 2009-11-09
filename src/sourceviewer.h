@@ -21,16 +21,50 @@
 #define SOURCEVIEWER_H
 
 #include <qdialog.h>
+#include <qplaintextedit.h>
 
 class QVBoxLayout;
 class SourceHighlighter;
 class PlainTextEditSearch;
-class QPlainTextEdit;
 class QMenuBar;
 class QMenu;
 class QUrl;
 class QAction;
 class QNetworkReply;
+class TextEdit;
+
+class LineNumber : public QWidget
+{
+    Q_OBJECT
+public:
+    LineNumber(TextEdit *parent);
+
+private:
+    TextEdit *editor;
+
+protected:
+    void paintEvent(QPaintEvent *event);
+
+protected slots:
+    void updateContents();
+};
+
+
+class TextEdit : public QPlainTextEdit
+{
+    Q_OBJECT
+public:
+    TextEdit(QString text, QWidget *parent);
+    void lineNumberPaintEvent(QPaintEvent *e);
+
+protected:
+    void resizeEvent(QResizeEvent *e);
+
+private:
+    LineNumber *lineNumber;
+};
+
+
 class SourceViewer : public QDialog
 {
     Q_OBJECT
@@ -41,7 +75,7 @@ public:
     ~SourceViewer();
 
 private:
-    QPlainTextEdit *m_edit;
+    TextEdit *m_edit;
     SourceHighlighter *m_highlighter;
     PlainTextEditSearch *m_plainTextEditSearch;
     QVBoxLayout *m_layout;

@@ -25,6 +25,7 @@
 #include <qnetworkcookie.h>
 #include <qnetworkreply.h>
 #include <qnetworkrequest.h>
+#include <qpainter.h>
 #include <qplaintextedit.h>
 #include <qshortcut.h>
 #include <qsettings.h>
@@ -36,10 +37,83 @@
 #include "plaintexteditsearch.h"
 #include "sourcehighlighter.h"
 
+LineNumber::LineNumber(TextEdit *parent)
+        :QWidget(parent)
+{
+    editor = parent;
+}
+
+void LineNumber::paintEvent(QPaintEvent *event)
+{
+    editor->lineNumberPaintEvent(event);
+}
+
+void LineNumber::updateContents()
+{
+    update();
+}
+
+
+TextEdit::TextEdit(QString text, QWidget *parent)
+        :QPlainTextEdit(text, parent)
+{
+    setLineWrapMode(QPlainTextEdit::WidgetWidth);
+    setReadOnly(true);
+    QFont font = QPlainTextEdit::font();
+    font.setFamily(QLatin1String("Monospace"));
+    setFont(font);
+    setLineWidth(0);
+    setFrameShape(QFrame::NoFrame);
+
+    lineNumber = new LineNumber(this);
+
+    connect(this, SIGNAL(updateRequest(QRect,int)), lineNumber, SLOT(updateContents()));
+
+}
+
+
+void TextEdit::lineNumberPaintEvent(QPaintEvent *e)
+{
+    QPainter p(lineNumber);
+    p.fillRect(e->rect(), palette().window());
+    p.setPen(QColor(Qt::darkGray));
+    QFont font = p.font();
+    p.setFont(font);
+
+    QTextBlock block = firstVisibleBlock();
+    while (block.isValid()) {
+        qreal top = blockBoundingGeometry(block).translated(contentOffset()).top();
+        /* 2 pixels for right margin */
+        QRect rect(0, top, lineNumber->width() - 2, fontMetrics().height());
+
+        if (top > height())
+            break;
+
+        p.drawText(rect, Qt::AlignRight, QString(QLatin1String("%1")).arg(block.blockNumber()));
+        block = block.next();
+    }
+}
+
+
+void TextEdit::resizeEvent(QResizeEvent *e)
+{
+    QPlainTextEdit::resizeEvent(e);
+
+    int bc = blockCount();
+    QFontMetrics fm(QPlainTextEdit::font());
+    QSize numberSize = fm.size(0, QString(QLatin1String("%1")).arg(bc));
+
+    QRect rect = contentsRect();
+    /* 2 pixels for left margin + 2 pixels for right margin = 4 */
+    lineNumber->setGeometry(QRect(rect.top(), rect.left(), numberSize.width() + 4, rect.height()));
+    setViewportMargins(numberSize.width() + 4, 0, 0, 0);
+}
+
+
 SourceViewer::SourceViewer(const QString &source, const QString &title,
                            const QUrl &url, QWidget *parent)
     : QDialog(parent)
-    , m_edit(new QPlainTextEdit(tr("Loading..."), this))
+    , m_edit(new TextEdit(tr("Loading..."), this))
     , m_highlighter(new SourceHighlighter(m_edit->document()))
     , m_plainTextEditSearch(new PlainTextEditSearch(m_edit, this))
     , m_layout(new QVBoxLayout(this))
@@ -54,14 +128,6 @@ SourceViewer::SourceViewer(const QString &source, const QString &title,
     settings.beginGroup(QLatin1String("SourceViewer"));
     QSize size = settings.value(QLatin1String("size"), QSize(640, 480)).toSize();
     resize(size);
-
-    m_edit->setLineWrapMode(QPlainTextEdit::WidgetWidth);
-    m_edit->setReadOnly(true);
-    QFont font = m_edit->font();
-    font.setFamily(QLatin1String("Monospace"));
-    m_edit->setFont(font);
-    m_edit->setLineWidth(0);
-    m_edit->setFrameShape(QFrame::NoFrame);
 
     m_menuBar->addMenu(m_editMenu);
     m_editMenu->addAction(m_findAction);
