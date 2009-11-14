@@ -56,12 +56,15 @@ class TextEdit : public QPlainTextEdit
 public:
     TextEdit(QString text, QWidget *parent);
     void lineNumberPaintEvent(QPaintEvent *e);
+    void enableLineNumbering(bool);
 
 protected:
     void resizeEvent(QResizeEvent *e);
 
 private:
     LineNumber *lineNumber;
+    bool lineNumberingEnabled;
+    void resizeLineNumberMargin();
 };
 
 
@@ -80,14 +83,20 @@ private:
     PlainTextEditSearch *m_plainTextEditSearch;
     QVBoxLayout *m_layout;
     QMenuBar *m_menuBar;
+    QMenu *m_fileMenu;
     QMenu *m_editMenu;
+    QAction *m_quitAction;
     QAction *m_findAction;
+    QAction *m_lineWrapAction;
+    QAction *m_lineNumberAction;
     QMenu *m_viewMenu;
     QNetworkReply *m_reply;
     QString m_source;
 
 private slots:
     void loadingFinished();
+    void enableLineWrapping(bool checked);
+    void enableLineNumbering(bool enable);
 };
 
 #endif
